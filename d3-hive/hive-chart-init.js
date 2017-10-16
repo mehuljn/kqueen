@@ -18,11 +18,11 @@ var K8SHiveChart = {
      ,  height = config.height || 600
      ,  outerRadius = config.outerRadius || 300
      ,  innerRadius = config.innerRadius || 40
-     ,  data_axes = [
-          {x: 0, angle: -45, outer_radius: 240, name:"Pods", kind: "Pod"},
-          {x: 1, angle: 45, outer_radius: 240, name:"Nodes", kind: "Node"},
-          {x: 2, angle: 135, outer_radius: 240, name:"Services", kind: "Service"},
-          {x: 3, angle: 225, outer_radius: 240, name:"Other", kind: "Other"}
+     ,  axes = [
+          {x: 0, angle: 30, radius: 240, name: "Pods", kind: "Pod"},
+          {x: 1, angle: 270, radius: 160, name: "Nodes", kind: "Node"},
+          {x: 2, angle: 150, radius: 160, name: "Services", kind: "Service"},
+          {x: 3, angle: 210, radius: 120, name: "Miscellaneous", kind: "Other"}
         ]
      ,  icon_mapping = {
           Pod: "\uf1fb", // engine
@@ -37,17 +37,46 @@ var K8SHiveChart = {
           Other: "black"
     };
 
+    self.itemCounters = {
+      Service: 0,
+      Pod: 0,
+      Node: 0,
+      Other: 0
+    };
+
+    self.axisMapping = {
+      Pod: 0,
+      Node: 1,
+      Service: 2,
+      Other: 3
+    };
+
+    var radius_mapping = {
+      Pod: d3.scaleLinear().range([innerRadius, 240]),
+      Node: d3.scaleLinear().range([innerRadius, 160]),
+      Service: d3.scaleLinear().range([innerRadius, 160]),
+      Other: d3.scaleLinear().range([innerRadius, 120])
+    };
+
     if(typeof data.items === 'object'){
       data.items = Object.values(data.items);
     }
 
     var nodes = this.createNodes(data.items);
+
+    self.itemStep = {
+      Service: 1 / self.itemCounters.Service,
+      Pod: 1 / self.itemCounters.Pod,
+      Node: 1 / self.itemCounters.Node,
+      Other: 1 / self.itemCounters.Other
+    };
+
     var links = this.createLinks(nodes, data.relations);
 
     var angle = function(d) {
       var angle = 0
        ,  found = false;
-      data_axes.forEach(function(item) {
+      axes.forEach(function(item) {
         if (d.kind == item.kind) {
           angle = item.angle;
           found=true;
@@ -101,26 +130,25 @@ var K8SHiveChart = {
 
     // Hive plot render
 
-    axes = svg.selectAll(".node").data(data_axes)
+    axe = svg.selectAll(".node").data(axes)
       .enter().append("g");
 
-    axes.append("line")
+    axe.append("line")
       .attr("class", "axis")
-      .attr("transform", function(d){
-          return "rotate(" + d.angle + ")";
-      })
-      .attr("x1", radius.range()[0])
-      .attr("x2", radius.range()[1]);
+      .attr("transform", function(d) { return "rotate(" + d.angle + ")"; })
+      .attr("x1", function(d) { return radius_mapping[d.kind].range()[0] })
+      .attr("x2", function(d) { return radius_mapping[d.kind].range()[1] });
 
-    axes.append("text")
+    axe.append("text")
       .attr("class", "axis-label")
-      .attr('font-size', function(d) { return '18px'; } )
+      .attr('font-size', '16px' )
+      .attr('font-family', 'verdana' )
       .attr('text-anchor', 'middle')
       .attr('alignment-baseline', 'central')
       .text(function(d) { return d.name; })
       .attr("transform", function(d) {
-        x = (radius.range()[1] + 40) * Math.cos(Math.radians(d.angle));
-        y = (radius.range()[1] + 40) * Math.sin(Math.radians(d.angle));
+        x = (radius_mapping[d.kind].range()[1] + 30) * Math.cos(Math.radians(d.angle));
+        y = (radius_mapping[d.kind].range()[1] + 30) * Math.sin(Math.radians(d.angle));
         return "translate(" + x + ", " + y + ")";
       });
 
@@ -129,52 +157,44 @@ var K8SHiveChart = {
         .attr("class", "link")
         .attr("d", d3.hive.link()
         .angle(function(d) { return Math.radians(angle(d)); })
-        .radius(function(d) { return radius(d.y); }))
+        .radius(function(d) { return radius_mapping[d.kind](d.y*itemStep[d.kind] - 0.1); }))
         //.style("stroke", function(d) { return color(d.source.kind); })
         .on("mouseover", NodeMouseFunctions.linkOver)
         .on("mouseout", NodeMouseFunctions.out);
 
-
-    nodes = svg.selectAll(".node").data(nodes)
+    node = svg.selectAll(".node").data(nodes)
       .enter().append("g")
         .attr("class", "node")
         .attr("transform", function(d) {
-          x = radius(d.y) * Math.cos(Math.radians(angle(d)));
-          y = radius(d.y) * Math.sin(Math.radians(angle(d)));
+          x = radius_mapping[d.kind](d.y*itemStep[d.kind] - 0.1) * Math.cos(Math.radians(angle(d)));
+          y = radius_mapping[d.kind](d.y*itemStep[d.kind] - 0.1) * Math.sin(Math.radians(angle(d)));
           return "translate(" + x + ", " + y + ")";
         })
         .on("mouseover", NodeMouseFunctions.nodeOver)
         .on("mouseout", NodeMouseFunctions.out);
 
-    nodes.append("circle")
-      .attr("r", 16)
+    node.append("circle")
+      .attr("r", 12)
       .style("stroke", function(d) { return color(d.kind); })
 
-    nodes.append("text")
+    node.append("text")
       .attr('font-family', 'Material Design Icons')
       .attr("color", function(d) { return color(d.kind); })
-      .attr('font-size', function(d) { return '18px'; } )
+      .attr('font-size', function(d) { return '14px'; } )
       .text(function(d) { return icon(d.kind); })
-      .attr("transform", "translate(-9, 6)")
+      .attr("transform", "translate(-7, 5)")
   },
 
   createNodes: function(items){
-    var itemCounters={Service:0,Pod:0, Node:0, Other:0}
-     ,  axisMapping = {
-          Pod: 0, // engine
-          Node: 1, // server
-          Service: 2, // web
-          Other: 3 // other services
-    };
     return items.map(function(item){
         item["id"] = item.metadata.uid;
         item["name"] = item.metadata.name || "Unnamed node";
         if(["Pod","Service","Node"].indexOf(item.kind) < 0){
           item.kind = "Other";
         }
-        item["x"] = axisMapping[item.kind];
-        itemCounters[item.kind]++;
-        item["y"] = .13*itemCounters[item.kind];
+        item["x"] = self.axisMapping[item.kind];
+        self.itemCounters[item.kind]++;
+        item["y"] = self.itemCounters[item.kind];
         return item;
     });
   },
