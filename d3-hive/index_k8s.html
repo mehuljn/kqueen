@@ -39,7 +39,7 @@
 Math.radians = function(degrees) {
   return degrees * Math.PI / 180;
 };
- 
+
 // Converts from radians to degrees.
 Math.degrees = function(radians) {
   return radians * 180 / Math.PI;
@@ -67,14 +67,14 @@ var axis_mapping = {
   Pod: 0, // engine
   Node: 1, // server
   Service: 2, // web
-  Other: 3 // web
+  Other: 3 // other services
 }
 
 var icon_mapping = {
   Pod: "\uf1fb", // engine
   Node: "\uf48b", // server
   Service: "\uf59f", // web
-  Other: "\uf59f" // web
+  Other: "\uf59f" // other services
 }
 
 var color_mapping = {
@@ -86,22 +86,34 @@ var color_mapping = {
 
 var _counters={Service:0,Pod:0, Node:0, Other:0}
 var nodes = Object.values(clusterData.items).map(function(item){
-  
-
   item["id"] = item.metadata.uid;
   if(["Pod","Service","Node"].indexOf(item.kind) < 0){
     item.kind = "Other"
-
   }
-  item["x"] = axis_mapping[item.kind] || 3;
+  item["x"] = axis_mapping[item.kind];
   _counters[item.kind]++
   item["y"] = 0.15*_counters[item.kind];
   return item;
 });
+var links = clusterData.relations.map(function(link){
+  var retLink = {};
+  nodes.forEach(function(node){
+    if(link.source == node.id){
+      retLink.source = node;
+    } else if(link.target == node.id){
+      retLink.target = node;
+    }
+  });
+  if(!retLink.hasOwnProperty("source") || !retLink.hasOwnProperty("target")){
+    console.log("Cannot found relation node for link " + link);
+    retLink = link;
+  }
+  return retLink;
+});
 
 console.log(nodes);
+console.log(links);
 
-var links = clusterData.relations;
 var angle = function(i) {
   var angle = 0;
   data_axes.forEach(function(item) {
@@ -111,7 +123,7 @@ var angle = function(i) {
   });
   return angle
 }
-//var angle = d3.scalePoint().domain(d3.range(data_domains+1)).range([0, 2 * Math.PI]);
+var angle2 = d3.scalePoint().domain(d3.range(data_domains+1)).range([0, 2 * Math.PI]);
 var radius = d3.scaleLinear().range([innerRadius, outerRadius]);
 var icon = function(i) { return icon_mapping[i] };
 var color = function(i) { return color_mapping[i] };
@@ -162,7 +174,7 @@ axes.append("text")
   .attr('text-anchor', 'middle')
   .attr('alignment-baseline', 'central')
   .text(function(d) { return d.name; })
-  .attr("transform", function(d) { 
+  .attr("transform", function(d) {
     x = (radius.range()[1] + 20) * Math.cos(Math.radians(d.angle));
     y = (radius.range()[1] + 20) * Math.sin(Math.radians(d.angle));
     return "translate(" + x + ", " + y + ")";
@@ -173,16 +185,15 @@ svg.selectAll(".link").data(links)
     .attr("class", "link")
     .attr("d", d3.hive.link()
     .angle(function(d) { return angle(d); })
-    .radius(function(d) { return radius(d); }))
-    .style("stroke", function(d) { return color(d.source.kind); });
+    .radius(function(d) { return radius(d.y); }))
+    .style("stroke", function(d) { return color(d.source.kind); })
 
 
 nodes = svg.selectAll(".node").data(nodes)
   .enter().append("g")
-    .attr("transform", function(d) { 
+    .attr("transform", function(d) {
       x = radius(d.y) * Math.cos(Math.radians(angle(d)));
       y = radius(d.y) * Math.sin(Math.radians(angle(d)));
-      console.log([d.id, x, y])
       return "translate(" + x + ", " + y + ")";
     });
 
