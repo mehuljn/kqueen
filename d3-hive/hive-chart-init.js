@@ -66,11 +66,13 @@ var K8SHiveChart = {
       linkOver: function(d){
         svg.selectAll(".link").classed("active", function(p) { return p === d; });
         svg.selectAll(".node circle").classed("active", function(p) { return p === d.source || p === d.target; });
+        svg.selectAll(".node text").classed("active", function(p) { return p === d.source || p === d.target; });
         //NodeMouseFunctions.over();
       },
       nodeOver: function(d) {
         svg.selectAll(".link").classed("active", function(p) { return p.source === d || p.target === d; });
-        d3.select(this).classed("active", true);
+        d3.select(this).select("circle").classed("active", true);
+        d3.select(this).select("text").classed("active", true);
         tooltip.html("Node - " + d.name + "<br/>" + "Kind - " + d.kind)
           .style("left", (d3.event.pageX + 5) + "px")
           .style("top", (d3.event.pageY - 28) + "px");
@@ -100,7 +102,7 @@ var K8SHiveChart = {
     // Hive plot render
 
     axes = svg.selectAll(".node").data(data_axes)
-      .enter().append("g")
+      .enter().append("g");
 
     axes.append("line")
       .attr("class", "axis")
@@ -135,6 +137,7 @@ var K8SHiveChart = {
 
     nodes = svg.selectAll(".node").data(nodes)
       .enter().append("g")
+        .attr("class", "node")
         .attr("transform", function(d) {
           x = radius(d.y) * Math.cos(Math.radians(angle(d)));
           y = radius(d.y) * Math.sin(Math.radians(angle(d)));
@@ -145,7 +148,6 @@ var K8SHiveChart = {
 
     nodes.append("circle")
       .attr("r", 16)
-      .attr("class", "node")
       .style("stroke", function(d) { return color(d.kind); })
 
     nodes.append("text")
