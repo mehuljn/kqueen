@@ -123,7 +123,6 @@ var angle = function(i) {
   });
   return angle
 }
-var angle2 = d3.scalePoint().domain(d3.range(data_domains+1)).range([0, 2 * Math.PI]);
 var radius = d3.scaleLinear().range([innerRadius, outerRadius]);
 var icon = function(i) { return icon_mapping[i] };
 var color = function(i) { return color_mapping[i] };
@@ -184,7 +183,7 @@ svg.selectAll(".link").data(links)
   .enter().append("path")
     .attr("class", "link")
     .attr("d", d3.hive.link()
-    .angle(function(d) { return angle(d); })
+    .angle(function(d) { return Math.radians(angle(d)); })
     .radius(function(d) { return radius(d.y); }))
     .style("stroke", function(d) { return color(d.source.kind); })
 
