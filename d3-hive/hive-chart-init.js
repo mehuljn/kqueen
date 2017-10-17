@@ -7,8 +7,8 @@ Math.degrees = function(radians) {
   return radians * 180 / Math.PI;
 };
 
-var K8SHiveChart = {
-  init: function(data, config){
+var K8sHiveChart = {
+  init: function(container, config, data) {
     if(!data){
       throw new Error("Cannot init K8SHiveChart data is invalid!")
     }
@@ -117,7 +117,7 @@ var K8SHiveChart = {
       }
     };
 
-    var svg = d3.select("body")
+    var svg = d3.select(container)
       .append("svg")
         .attr("width", width)
         .attr("height", height)

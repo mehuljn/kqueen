@@ -48,8 +48,9 @@
 </style>
  <link href="./mdi.css" media="all" rel="stylesheet" type="text/css" />
 <body>
+<div id="hive"></div>
 <script src="./d3.js"></script>
 <script src="./d3.hive.js"></script>
 <script src="./k8s.data.js"></script>
 <script src="./hive-chart-init.js"></script>
-<script>K8SHiveChart.init(clusterData)</script>
+<script>K8sHiveChart.init("#hive", {}, clusterData)</script>
