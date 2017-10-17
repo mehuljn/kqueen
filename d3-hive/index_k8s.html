@@ -48,9 +48,98 @@
 </style>
  <link href="./mdi.css" media="all" rel="stylesheet" type="text/css" />
 <body>
+<div class="btn-group">
+  <button type="button" class="btn btn-primary">Force layout</button>
+  <button type="button" class="btn btn-primary">Hivechart</button>
+</div>
 <div id="hive"></div>
+
+<div class="panel hidden" id="manifest">
+  <h3 ng-bind="kind"></h2>
+  <h4 ng-bind="name"></h3>
+  <table class="bordered">
+    <tr ng-if="labels">
+      <td class="key">labels</td>
+      <td class="value">
+        <div class="label" ng-repeat="(key,value) in labels">
+          <span class="key label">{{ key }}</span>{{ value }}
+        </div>
+      </td>
+    </tr>
+
+    <tr ng-if="selector">
+      <td class="key">selector</td>
+      <td class="value">
+        <div class="label selector" ng-repeat="(key,value) in selector">
+          <span class="key label">{{ key }}</span>{{ value }}
+        </div>
+      </td>
+    </tr>
+
+    <tr ng-if="created">
+      <td class="key">created</td>
+      <td class="value" ng-bind="created"></td>
+    </tr>
+
+    <tr ng-if="namespace">
+      <td class="key">namespace</td>
+      <td class="value" ng-bind="namespace"></td>
+    </tr>
+
+    <tr ng-if="selfLink">
+      <td class="key">selfLink</td>
+      <td class="value" ng-bind="selfLink"></td>
+    </tr>
+
+    <tr ng-if="dnsPolicy">
+      <td class="key">dnsPolicy</td>
+      <td class="value" ng-bind="dnsPolicy"></td>
+    </tr>
+
+    <tr ng-if="nodeName">
+      <td class="key">nodeName</td>
+      <td class="value" ng-bind="nodeName"></td>
+    </tr>
+
+    <tr ng-if="restartPolicy">
+      <td class="key">restartPolicy</td>
+      <td class="value" ng-bind="restartPolicy"></td>
+    </tr>
+
+    <tr ng-if="scheduleName">
+      <td class="key">scheduleName</td>
+      <td class="value" ng-bind="scheduleName"></td>
+    </tr>
+    <tr ng-if="serviceAccount">
+      <td class="key">serviceAccount</td>
+      <td class="value" ng-bind="serviceAccount"></td>
+    </tr>
+    <tr ng-if="image">
+      <td class="key">image</td>
+      <td class="value" ng-bind="image"></td>
+    </tr>
+    <tr ng-if="imagePullPolicy">
+      <td class="key">imagePullPolicy</td>
+      <td class="value" ng-bind="imagePullPolicy"></td>
+    </tr>
+    <tr ng-if="clusterIP">
+      <td class="key">clusterIP</td>
+      <td class="value" ng-bind="clusterIP"></td>
+    </tr>
+    <tr ng-if="externalID">
+      <td class="key">externalID</td>
+      <td class="value" ng-bind="externalID"></td>
+    </tr>
+
+    <tr ng-if="providerID">
+      <td class="key">providerID</td>
+      <td class="value" ng-bind="providerID"></td>
+    </tr>
+
+  </table>
+
+</div>
 <script src="./d3.js"></script>
 <script src="./d3.hive.js"></script>
-<script src="./k8s.data.js"></script>
 <script src="./hive-chart-init.js"></script>
-<script>K8sHiveChart.init("#hive", {}, clusterData)</script>
+<script>K8sHiveChart.init("#hive", "k8s.data.json")</script>

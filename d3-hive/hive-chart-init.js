@@ -8,10 +8,9 @@ Math.degrees = function(radians) {
 };
 
 var K8sHiveChart = {
-  init: function(container, config, data) {
-    if(!data){
-      throw new Error("Cannot init K8SHiveChart data is invalid!")
-    }
+  init: function(container, apiUrl, config) {
+    var chart = this;
+    d3.json(apiUrl, function(data){
     config = config || {};
 
     var width = config.width || 960
@@ -62,7 +61,7 @@ var K8sHiveChart = {
       data.items = Object.values(data.items);
     }
 
-    var nodes = this.createNodes(data.items);
+    var nodes = chart.createNodes(data.items);
 
     self.itemStep = {
       Service: 1 / self.itemCounters.Service,
@@ -71,7 +70,7 @@ var K8sHiveChart = {
       Other: 1 / self.itemCounters.Other
     };
 
-    var links = this.createLinks(nodes, data.relations);
+    var links = chart.createLinks(nodes, data.relations);
 
     var angle = function(d) {
       var angle = 0
@@ -183,6 +182,7 @@ var K8sHiveChart = {
       .attr('font-size', function(d) { return '14px'; } )
       .text(function(d) { return icon(d.kind); })
       .attr("transform", "translate(-7, 5)")
+    });
   },
 
   createNodes: function(items){
