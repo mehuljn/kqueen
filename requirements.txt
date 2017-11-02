@@ -4,6 +4,7 @@ kubernetes
 python-etcd
 python-jenkins
 pyyaml
+flask-swagger-ui
 requests
 gunicorn
 

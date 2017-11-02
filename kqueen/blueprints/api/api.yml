@@ -6,14 +6,23 @@ info:
   description: A simple API to interact with Kubernetes clusters
 
 schemes:
-  - https
   - http
+  - https
+
+securityDefinitions:
+  JWT:
+    type: apiKey
+    name: "Authorization"
+    in: header
+
+security:
+  - JWT: []
 
 basePath: /api/v1
 
 definitions:
-  Cluster:
-    type: object
+  getCluster:
+    type: "object"
     properties:
       id:
         type: "string"
@@ -21,31 +30,21 @@ definitions:
       name:
         type: "string"
       provisioner:
-        type: "string"
-        format: "uuid"
+        $ref: "#/definitions/getProvisioner"
       state:
         type: "string"
         enum:
-          - "deployed"
-          - "pending"
-          - "failed"
-          - "deleted"
+          - "OK"
+          - "Error"
+          - "Deploying"
+          - "Destroying"
+          - "Unknown"
       kubeconfig:
         type: "string"
-  ClusterNode:
-    type: object
-    properties:
-      name:
-        type: string
-      # TODO: more properties
-  ClusterService:
-    type: object
-    properties:
-      name:
-        type: string
-      # TODO: more properties
-  Provisioner:
-    type: object
+      metadata:
+        type: "string"
+  getProvisioner:
+    type: "object"
     properties:
       id:
         type: "string"
@@ -54,11 +53,50 @@ definitions:
         type: "string"
       engine:
         type: "string"
+      state:
+        type: "string"
+        enum:
+          - "OK"
+          - "Error"
+          - "Not Reachable"
       parameters:
         description: "Engine-specific parameters"
         type: "object"
 
 paths:
+  # auth
+  /auth:
+    post:
+      summary: "Authentication URL which returns JWT tokens"
+      security: []
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        "200":
+          description: "Successful authentication"
+          schema:
+            type: "object"
+            properties:
+              access_token:
+                type: string
+                description: "JWT token"
+        "401":
+          description: "Authorization information is missing or invalid."
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            type: "object"
+            properties:
+              username:
+                type: "string"
+                example: "admin"
+              password:
+                type: "string"
+                example: "default"
   # clusters
   /clusters:
     get:
@@ -66,12 +104,12 @@ paths:
       produces:
         - "application/json"
       responses:
-        200:
+        "200":
           description: "Successful operation"
           schema:
             type: "array"
             items:
-              $ref: "#/definitions/Cluster"
+              $ref: "#/definitions/getCluster"
 
   /clusters/{id}:
     get:
@@ -87,7 +125,7 @@ paths:
         200:
           description: "Successful operation"
           schema:
-            $ref: "#/definitions/Cluster"
+            $ref: "#/definitions/getCluster"
         400:
           description: "Invalid id supplied"
         404:
@@ -109,50 +147,6 @@ paths:
         404:
           description: "Cluster not found"
 
-  /clusters/{id}/nodes:
-    get:
-      summary: Get information about cluster nodes
-      parameters:
-        - name: "id"
-          in: "path"
-          required: true
-          type: string
-      produces:
-        - "application/json"
-      responses:
-        200:
-          description: "Successful operation"
-          schema:
-            type: "array"
-            items:
-              $ref: "#/definitions/ClusterNode"
-        400:
-          description: "Invalid id supplied"
-        404:
-          description: "Cluster not found"
-
-  /clusters/{id}/services:
-    get:
-      summary: Get information about cluster services
-      produces:
-        - "application/json"
-      parameters:
-        - name: "id"
-          in: "path"
-          required: true
-          type: string
-      responses:
-        200:
-          description: "Successful operation"
-          schema:
-            type: "array"
-            items:
-              $ref: "#/definitions/ClusterService"
-        400:
-          description: "Invalid id supplied"
-        404:
-          description: "Cluster not found"
-          
   # provisioners
   /provisioners:
     get:
@@ -165,7 +159,7 @@ paths:
           schema:
             type: "array"
             items:
-              $ref: "#/definitions/Provisioner"
+              $ref: "#/definitions/getProvisioner"
 
   /provisioners/{id}:
     get:
@@ -181,7 +175,7 @@ paths:
         200:
           description: "Successful operation"
           schema:
-            $ref: "#/definitions/Provisioner"
+            $ref: "#/definitions/getProvisioner"
         400:
           description: "Invalid id supplied"
         404:
@@ -202,4 +196,3 @@ paths:
           description: "Invalid id supplied"
         404:
           description: "Cluster not found"
-      
