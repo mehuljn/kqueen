@@ -145,6 +145,14 @@ components:
         parameters:
           description: "Engine-specific parameters"
           type: "object"
+    DeploymentList:
+      type: "object"
+      properties:
+        deployments:
+          type: "object"
+          example: "https://raw.githubusercontent.com/kubernetes/kubernetes/master/api/openapi-spec/swagger.json#/definitions/io.k8s.api.apps.v1.DeploymentList"
+          schema:
+            $ref: "https://raw.githubusercontent.com/kubernetes/kubernetes/master/api/openapi-spec/swagger.json#/definitions/io.k8s.api.apps.v1.DeploymentList"
 
 security:
   - JWT: []
