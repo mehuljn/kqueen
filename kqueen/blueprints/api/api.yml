@@ -35,6 +35,46 @@ definitions:
         type: "integer"
         description: "HTTP error code"
         example: 401
+  Organization:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+        format: "uuid"
+      name:
+        type: "string"
+      namespace:
+        type: "string"
+  getUser:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+        format: "uuid"
+      username:
+        type: "string"
+      email:
+        type: "string"
+      password:
+        type: "string"
+      organization:
+        $ref: "#/definitions/Organization"
+  postUser:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+        format: "uuid"
+      username:
+        type: "string"
+      email:
+        type: "string"
+      password:
+        type: "string"
+      organization:
+        type: "string"
+        description: "Reference to related Organization"
+        example: "Organization:<uuid>"
   getCluster:
     type: "object"
     properties:
@@ -67,6 +107,7 @@ definitions:
         type: "string"
       provisioner:
         type: "string"
+        description: "Reference to related Provisioner"
         example: "Provisioner:<uuid>"
       state:
         type: "string"
@@ -136,6 +177,264 @@ paths:
             application/json:
               schema:
                 $ref: "#/definitions/Unauthorized"
+  # organizations
+  /organizations:
+    get:
+      summary: "List all Organizations"
+      responses:
+        "200":
+          description: "Successful operation"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/definitions/Organization"
+        "401":
+          description: "Authorization information is missing or invalid."
+          content:
+            application/json:
+              schema:
+                $ref: "#/definitions/Unauthorized"
+    post:
+      summary: "Create new Organization"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/definitions/Organization"
+      responses:
+        "200":
+          description: "Successful operation"
+          content:
+            application/json:
+              schema:
+                $ref: "#/definitions/Organization"
+        "400":
+          description: "Request body is not valid JSON."
+        "401":
+          description: "Authorization information is missing or invalid."
+          content:
+            application/json:
+              schema:
+                $ref: "#/definitions/Unauthorized"
+  /organizations/{id}:
+    get:
+      summary: "Get information about target Organization"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          type: "string"
+          format: "uuid"
+      responses:
+        "200":
+          description: "Successful operation"
+          content:
+            application/json:
+              schema:
+                $ref: "#/definitions/Organization"
+        "401":
+          description: "Authorization information is missing or invalid."
+          content:
+            application/json:
+              schema:
+                $ref: "#/definitions/Unauthorized"
+        "404":
+          description: "Invalid ID or Organization not found"
+    patch:
+      summary: "Update data of target Organization"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          type: "string"
+          format: "uuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/definitions/Organization"
+      responses:
+        "200":
+          description: "Successful operation"
+          content:
+            application/json:
+              schema:
+                $ref: "#/definitions/Organization"
+        "401":
+          description: "Authorization information is missing or invalid."
+          content:
+            application/json:
+              schema:
+                $ref: "#/definitions/Unauthorized"
+        "404":
+          description: "Invalid ID or Organization not found"
+    delete:
+      summary: "Delete target Organization"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          type: "string"
+          format: "uuid"
+      responses:
+        "200":
+          description: "Successful operation"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  id:
+                    type: "string"
+                    format: "uuid"
+                  state:
+                    type: "string"
+                    example: "deleted"
+        "400":
+          description: "Invalid ID supplied"
+        "401":
+          description: "Authorization information is missing or invalid."
+          content:
+            application/json:
+              schema:
+                $ref: "#/definitions/Unauthorized"
+        "404":
+          description: "Organization not found"
+        "500":
+          description: "Could not delete Organization"
+  # users
+  /users:
+    get:
+      summary: "List all Users"
+      responses:
+        "200":
+          description: "Successful operation"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/definitions/getUser"
+        "401":
+          description: "Authorization information is missing or invalid."
+          content:
+            application/json:
+              schema:
+                $ref: "#/definitions/Unauthorized"
+    post:
+      summary: "Create new User"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/definitions/postUser"
+      responses:
+        "200":
+          description: "Successful operation"
+          content:
+            application/json:
+              schema:
+                $ref: "#/definitions/getUser"
+        "400":
+          description: "Request body is not valid JSON."
+        "401":
+          description: "Authorization information is missing or invalid."
+          content:
+            application/json:
+              schema:
+                $ref: "#/definitions/Unauthorized"
+  /users/{id}:
+    get:
+      summary: "Get information about target User"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          type: "string"
+          format: "uuid"
+      responses:
+        "200":
+          description: "Successful operation"
+          content:
+            application/json:
+              schema:
+                $ref: "#/definitions/getUser"
+        "401":
+          description: "Authorization information is missing or invalid."
+          content:
+            application/json:
+              schema:
+                $ref: "#/definitions/Unauthorized"
+        "404":
+          description: "Invalid ID or User not found"
+    patch:
+      summary: "Update data of target User"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          type: "string"
+          format: "uuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/definitions/postUser"
+      responses:
+        "200":
+          description: "Successful operation"
+          content:
+            application/json:
+              schema:
+                $ref: "#/definitions/getUser"
+        "401":
+          description: "Authorization information is missing or invalid."
+          content:
+            application/json:
+              schema:
+                $ref: "#/definitions/Unauthorized"
+        "404":
+          description: "Invalid ID or User not found"
+    delete:
+      summary: "Delete target User"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          type: "string"
+          format: "uuid"
+      responses:
+        "200":
+          description: "Successful operation"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  id:
+                    type: "string"
+                    format: "uuid"
+                  state:
+                    type: "string"
+                    example: "deleted"
+        "400":
+          description: "Invalid ID supplied"
+        "401":
+          description: "Authorization information is missing or invalid."
+          content:
+            application/json:
+              schema:
+                $ref: "#/definitions/Unauthorized"
+        "404":
+          description: "User not found"
+        "500":
+          description: "Could not delete User"
   # clusters
   /clusters:
     get:
