@@ -12,134 +12,142 @@ servers:
 components:
   securitySchemes:
     JWT:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
+      type: "http"
+      scheme: "bearer"
+      bearerFormat: "JWT"
+  schemas:
+    statusUnauthorized:
+      type: "object"
+      properties:
+        description:
+          type: "string"
+          description: "Error description"
+          example: "Invalid credentials"
+        error:
+          type: "string"
+          description: "HTTP error"
+          example: "Bad Request"
+        status_code:
+          type: "integer"
+          description: "HTTP error code"
+          example: 401
+    statusBadRequest:
+      type: "object"
+      properties:
+        code:
+          type: "integer"
+          example: 401
+        message:
+          type: "string"
+          example: "Bad request"
+    Organization:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+        name:
+          type: "string"
+        namespace:
+          type: "string"
+    getUser:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+        username:
+          type: "string"
+        email:
+          type: "string"
+        password:
+          type: "string"
+        organization:
+          $ref: "#/components/schemas/Organization"
+    postUser:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+        username:
+          type: "string"
+        email:
+          type: "string"
+        password:
+          type: "string"
+        organization:
+          type: "string"
+          description: "Reference to related Organization"
+          example: "Organization:<uuid>"
+    getCluster:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+        name:
+          type: "string"
+        provisioner:
+          $ref: "#/components/schemas/Provisioner"
+        state:
+          type: "string"
+          enum:
+            - "OK"
+            - "Error"
+            - "Deploying"
+            - "Destroying"
+            - "Unknown"
+        kubeconfig:
+          type: "string"
+        metadata:
+          type: "string"
+    postCluster:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+        name:
+          type: "string"
+        provisioner:
+          type: "string"
+          description: "Reference to related Provisioner"
+          example: "Provisioner:<uuid>"
+        state:
+          type: "string"
+          enum:
+            - "OK"
+            - "Error"
+            - "Deploying"
+            - "Destroying"
+            - "Unknown"
+        kubeconfig:
+          type: "string"
+        metadata:
+          type: "string"
+    Provisioner:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+        name:
+          type: "string"
+        engine:
+          type: "string"
+        state:
+          type: "string"
+          enum:
+            - "OK"
+            - "Error"
+            - "Not Reachable"
+        parameters:
+          description: "Engine-specific parameters"
+          type: "object"
 
 security:
   - JWT: []
-
-definitions:
-  Unauthorized:
-    type: "object"
-    properties:
-      description:
-        type: "string"
-        description: "Error description"
-        example: "Invalid credentials"
-      error:
-        type: "string"
-        description: "HTTP error"
-        example: "Bad Request"
-      status_code:
-        type: "integer"
-        description: "HTTP error code"
-        example: 401
-  Organization:
-    type: "object"
-    properties:
-      id:
-        type: "string"
-        format: "uuid"
-      name:
-        type: "string"
-      namespace:
-        type: "string"
-  getUser:
-    type: "object"
-    properties:
-      id:
-        type: "string"
-        format: "uuid"
-      username:
-        type: "string"
-      email:
-        type: "string"
-      password:
-        type: "string"
-      organization:
-        $ref: "#/definitions/Organization"
-  postUser:
-    type: "object"
-    properties:
-      id:
-        type: "string"
-        format: "uuid"
-      username:
-        type: "string"
-      email:
-        type: "string"
-      password:
-        type: "string"
-      organization:
-        type: "string"
-        description: "Reference to related Organization"
-        example: "Organization:<uuid>"
-  getCluster:
-    type: "object"
-    properties:
-      id:
-        type: "string"
-        format: "uuid"
-      name:
-        type: "string"
-      provisioner:
-        $ref: "#/definitions/Provisioner"
-      state:
-        type: "string"
-        enum:
-          - "OK"
-          - "Error"
-          - "Deploying"
-          - "Destroying"
-          - "Unknown"
-      kubeconfig:
-        type: "string"
-      metadata:
-        type: "string"
-  postCluster:
-    type: "object"
-    properties:
-      id:
-        type: "string"
-        format: "uuid"
-      name:
-        type: "string"
-      provisioner:
-        type: "string"
-        description: "Reference to related Provisioner"
-        example: "Provisioner:<uuid>"
-      state:
-        type: "string"
-        enum:
-          - "OK"
-          - "Error"
-          - "Deploying"
-          - "Destroying"
-          - "Unknown"
-      kubeconfig:
-        type: "string"
-      metadata:
-        type: "string"
-  Provisioner:
-    type: "object"
-    properties:
-      id:
-        type: "string"
-        format: "uuid"
-      name:
-        type: "string"
-      engine:
-        type: "string"
-      state:
-        type: "string"
-        enum:
-          - "OK"
-          - "Error"
-          - "Not Reachable"
-      parameters:
-        description: "Engine-specific parameters"
-        type: "object"
 
 paths:
   # auth
@@ -171,12 +179,19 @@ paths:
                   access_token:
                     type: "string"
                     description: "JWT token"
+        "400":
+          description: "Bad request"
+          content:
+            text/html:
+              schema:
+                type: "html"
+                example: "<html><body><title>400 Bad Request</title><h1>Bad Request</h1><p>Failed to decode JSON object: Expecting ',' delimiter: line 1 column 48 (char 47)</p></body></html>"
         "401":
           description: "Authorization information is missing or invalid."
           content:
             application/json:
               schema:
-                $ref: "#/definitions/Unauthorized"
+                $ref: "#/components/schemas/statusUnauthorized"
   # organizations
   /organizations:
     get:
@@ -189,13 +204,13 @@ paths:
               schema:
                 type: "array"
                 items:
-                  $ref: "#/definitions/Organization"
+                  $ref: "#/components/schemas/Organization"
         "401":
           description: "Authorization information is missing or invalid."
           content:
             application/json:
               schema:
-                $ref: "#/definitions/Unauthorized"
+                $ref: "#/components/schemas/statusUnauthorized"
     post:
       summary: "Create new Organization"
       requestBody:
@@ -203,14 +218,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/definitions/Organization"
+              $ref: "#/components/schemas/Organization"
       responses:
         "200":
           description: "Successful operation"
           content:
             application/json:
               schema:
-                $ref: "#/definitions/Organization"
+                $ref: "#/components/schemas/Organization"
         "400":
           description: "Request body is not valid JSON."
         "401":
@@ -218,7 +233,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/definitions/Unauthorized"
+                $ref: "#/components/schemas/statusUnauthorized"
   /organizations/{id}:
     get:
       summary: "Get information about target Organization"
@@ -234,13 +249,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/definitions/Organization"
+                $ref: "#/components/schemas/Organization"
         "401":
           description: "Authorization information is missing or invalid."
           content:
             application/json:
               schema:
-                $ref: "#/definitions/Unauthorized"
+                $ref: "#/components/schemas/statusUnauthorized"
         "404":
           description: "Invalid ID or Organization not found"
     patch:
@@ -256,20 +271,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/definitions/Organization"
+              $ref: "#/components/schemas/Organization"
       responses:
         "200":
           description: "Successful operation"
           content:
             application/json:
               schema:
-                $ref: "#/definitions/Organization"
+                $ref: "#/components/schemas/Organization"
         "401":
           description: "Authorization information is missing or invalid."
           content:
             application/json:
               schema:
-                $ref: "#/definitions/Unauthorized"
+                $ref: "#/components/schemas/statusUnauthorized"
         "404":
           description: "Invalid ID or Organization not found"
     delete:
@@ -301,7 +316,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/definitions/Unauthorized"
+                $ref: "#/components/schemas/statusUnauthorized"
         "404":
           description: "Organization not found"
         "500":
@@ -318,13 +333,13 @@ paths:
               schema:
                 type: "array"
                 items:
-                  $ref: "#/definitions/getUser"
+                  $ref: "#/components/schemas/getUser"
         "401":
           description: "Authorization information is missing or invalid."
           content:
             application/json:
               schema:
-                $ref: "#/definitions/Unauthorized"
+                $ref: "#/components/schemas/statusUnauthorized"
     post:
       summary: "Create new User"
       requestBody:
@@ -332,14 +347,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/definitions/postUser"
+              $ref: "#/components/schemas/postUser"
       responses:
         "200":
           description: "Successful operation"
           content:
             application/json:
               schema:
-                $ref: "#/definitions/getUser"
+                $ref: "#/components/schemas/getUser"
         "400":
           description: "Request body is not valid JSON."
         "401":
@@ -347,7 +362,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/definitions/Unauthorized"
+                $ref: "#/components/schemas/statusUnauthorized"
   /users/{id}:
     get:
       summary: "Get information about target User"
@@ -363,13 +378,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/definitions/getUser"
+                $ref: "#/components/schemas/getUser"
         "401":
           description: "Authorization information is missing or invalid."
           content:
             application/json:
               schema:
-                $ref: "#/definitions/Unauthorized"
+                $ref: "#/components/schemas/statusUnauthorized"
         "404":
           description: "Invalid ID or User not found"
     patch:
@@ -385,20 +400,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/definitions/postUser"
+              $ref: "#/components/schemas/postUser"
       responses:
         "200":
           description: "Successful operation"
           content:
             application/json:
               schema:
-                $ref: "#/definitions/getUser"
+                $ref: "#/components/schemas/getUser"
         "401":
           description: "Authorization information is missing or invalid."
           content:
             application/json:
               schema:
-                $ref: "#/definitions/Unauthorized"
+                $ref: "#/components/schemas/statusUnauthorized"
         "404":
           description: "Invalid ID or User not found"
     delete:
@@ -430,7 +445,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/definitions/Unauthorized"
+                $ref: "#/components/schemas/statusUnauthorized"
         "404":
           description: "User not found"
         "500":
@@ -447,13 +462,13 @@ paths:
               schema:
                 type: "array"
                 items:
-                  $ref: "#/definitions/getCluster"
+                  $ref: "#/components/schemas/getCluster"
         "401":
           description: "Authorization information is missing or invalid."
           content:
             application/json:
               schema:
-                $ref: "#/definitions/Unauthorized"
+                $ref: "#/components/schemas/statusUnauthorized"
     post:
       summary: "Create new Cluster"
       requestBody:
@@ -461,14 +476,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/definitions/postCluster"
+              $ref: "#/components/schemas/postCluster"
       responses:
         "200":
           description: "Successful operation"
           content:
             application/json:
               schema:
-                $ref: "#/definitions/getCluster"
+                $ref: "#/components/schemas/getCluster"
         "400":
           description: "Request body is not valid JSON."
         "401":
@@ -476,7 +491,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/definitions/Unauthorized"
+                $ref: "#/components/schemas/statusUnauthorized"
   /clusters/{id}:
     get:
       summary: "Get information about target Cluster"
@@ -492,13 +507,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/definitions/getCluster"
+                $ref: "#/components/schemas/getCluster"
         "401":
           description: "Authorization information is missing or invalid."
           content:
             application/json:
               schema:
-                $ref: "#/definitions/Unauthorized"
+                $ref: "#/components/schemas/statusUnauthorized"
         "404":
           description: "Invalid ID or Cluster not found"
     patch:
@@ -514,20 +529,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/definitions/postCluster"
+              $ref: "#/components/schemas/postCluster"
       responses:
         "200":
           description: "Successful operation"
           content:
             application/json:
               schema:
-                $ref: "#/definitions/getCluster"
+                $ref: "#/components/schemas/getCluster"
         "401":
           description: "Authorization information is missing or invalid."
           content:
             application/json:
               schema:
-                $ref: "#/definitions/Unauthorized"
+                $ref: "#/components/schemas/statusUnauthorized"
         "404":
           description: "Invalid ID or Cluster not found"
     delete:
@@ -559,7 +574,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/definitions/Unauthorized"
+                $ref: "#/components/schemas/statusUnauthorized"
         "404":
           description: "Cluster not found"
         "500":
@@ -576,13 +591,13 @@ paths:
               schema:
                 type: "array"
                 items:
-                  $ref: "#/definitions/Provisioner"
+                  $ref: "#/components/schemas/Provisioner"
         "401":
           description: "Authorization information is missing or invalid."
           content:
             application/json:
               schema:
-                $ref: "#/definitions/Unauthorized"
+                $ref: "#/components/schemas/statusUnauthorized"
     post:
       summary: "Create new Provisioner"
       requestBody:
@@ -590,14 +605,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/definitions/Provisioner"
+              $ref: "#/components/schemas/Provisioner"
       responses:
         "200":
           description: "Successful operation"
           content:
             application/json:
               schema:
-                $ref: "#/definitions/Provisioner"
+                $ref: "#/components/schemas/Provisioner"
         "400":
           description: "Request body is not valid JSON."
         "401":
@@ -605,7 +620,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/definitions/Unauthorized"
+                $ref: "#/components/schemas/statusUnauthorized"
   /provisioners/{id}:
     get:
       summary: "Get information about target Provisioner"
@@ -621,13 +636,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/definitions/Provisioner"
+                $ref: "#/components/schemas/Provisioner"
         "401":
           description: "Authorization information is missing or invalid."
           content:
             application/json:
               schema:
-                $ref: "#/definitions/Unauthorized"
+                $ref: "#/components/schemas/statusUnauthorized"
         "404":
           description: "Invalid ID or Provisioner not found"
     patch:
@@ -643,20 +658,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/definitions/Provisioner"
+              $ref: "#/components/schemas/Provisioner"
       responses:
         "200":
           description: "Successful operation"
           content:
             application/json:
               schema:
-                $ref: "#/definitions/Provisioner"
+                $ref: "#/components/schemas/Provisioner"
         "401":
           description: "Authorization information is missing or invalid."
           content:
             application/json:
               schema:
-                $ref: "#/definitions/Unauthorized"
+                $ref: "#/components/schemas/statusUnauthorized"
         "404":
           description: "Invalid ID or Provisioner not found"
     delete:
@@ -688,7 +703,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/definitions/Unauthorized"
+                $ref: "#/components/schemas/statusUnauthorized"
         "404":
           description: "Provisioner not found"
         "500":
